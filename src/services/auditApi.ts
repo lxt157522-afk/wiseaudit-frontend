@@ -29,19 +29,8 @@ export interface AuditFilesPayload {
   templateFile: File;
 }
 
-// 云部署：动态获取API基础地址
-const getApiBase = (): string => {
-  // 生产环境使用全局变量或相对路径
-  if (typeof __API_BASE__ !== 'undefined') {
-    return __API_BASE__;
-  }
-  // Vercel环境变量
-  if (import.meta.env.VITE_API_BASE) {
-    return import.meta.env.VITE_API_BASE;
-  }
-  // 默认使用相对路径（同域部署时）
-  return '';
-};
+// 硬编码API地址（可靠，不依赖环境变量）
+const API_BASE = 'https://wiseaudit-node.onrender.com';
 
 export async function runDeepAudit(files: AuditFilesPayload): Promise<AuditRunResponse> {
   const formData = new FormData();
@@ -52,7 +41,6 @@ export async function runDeepAudit(files: AuditFilesPayload): Promise<AuditRunRe
   formData.append("journal_file", files.journalFile);
   formData.append("template_file", files.templateFile);
 
-  const API_BASE = getApiBase();
   const endpoint = `${API_BASE}/api/run-audit`;
 
   console.log("[Cloud] 调用后端API:", endpoint);
@@ -62,7 +50,6 @@ export async function runDeepAudit(files: AuditFilesPayload): Promise<AuditRunRe
     response = await fetch(endpoint, {
       method: "POST",
       body: formData,
-      // 云部署需要显式处理CORS
       mode: "cors",
       credentials: "omit",
     });
@@ -90,8 +77,6 @@ export async function runDeepAudit(files: AuditFilesPayload): Promise<AuditRunRe
   return data;
 }
 
-// 下载文件辅助函数
 export function getDownloadUrl(filename: string): string {
-  const API_BASE = getApiBase();
   return `${API_BASE}/api/download/${filename}`;
 }
